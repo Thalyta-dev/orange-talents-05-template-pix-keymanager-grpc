@@ -1,0 +1,10 @@
+micronaut:
+  application:
+    name: pix
+datasources:
+  default:
+    url: jdbc:mysql://localhost:3306/db
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: ''
+jpa.default.properties.hibernate.hbm2ddl.auto: update
