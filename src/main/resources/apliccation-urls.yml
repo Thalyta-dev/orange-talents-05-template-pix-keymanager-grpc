@@ -1,0 +1,2 @@
+sistemaExternos:
+  contasItau: ${CONTAS_ITAU:http://localhost:9091}
