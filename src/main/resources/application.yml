@@ -15,3 +15,7 @@ jpa:
         hbm2ddl:
           auto: update
         show_sql: true
+
+
+sistemaExternos:
+  contasItau: ${CONTAS_ITAU:`http://localhost:9091/api/v1/clientes`}

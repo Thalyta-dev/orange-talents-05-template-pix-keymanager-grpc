@@ -1,6 +1,7 @@
 package com.zup.registraChave
 
 import com.zup.Exception.ChavePixExistenteException
+import com.zup.Exception.ClienteNaoEncontradoException
 import com.zup.servicosExternos.sistemaItau.SistemaItau
 import io.micronaut.http.HttpResponse
 import io.micronaut.validation.Validated
@@ -30,9 +31,9 @@ open class PixRegistraService {
 
         val dadosClient = sistemaItau.retornaDadosCliente(requestValidada.clientId.toString(),requestValidada.tipoConta.toString())
 
-        dadosClient ?: throw  IllegalArgumentException("Cliente não encontrado")
+        dadosClient ?: throw  ClienteNaoEncontradoException("Cliente não encontrado")
 
-        val chavePix = requestValidada.toModel(dadosClient = dadosClient)
+        val chavePix = requestValidada.toModel(dadosClient = dadosClient, repository)
 
         repository.save(chavePix).run {
             return this

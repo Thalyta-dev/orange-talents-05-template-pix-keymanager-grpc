@@ -1,11 +1,10 @@
 package com.zup.handlers
 
 
+import com.zup.Exception.ChavePixExistenteException
 import io.grpc.Status
 
-/**
- * By design, this class must NOT be managed by Micronaut
- */
+
 class DefaultExceptionHandler : ExceptionHandler<Exception> {
 
     override fun handle(e: Exception): ExceptionHandler.StatusWithDetails {

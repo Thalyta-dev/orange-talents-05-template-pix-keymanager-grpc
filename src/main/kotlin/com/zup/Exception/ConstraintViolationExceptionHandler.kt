@@ -8,9 +8,7 @@ import com.zup.handlers.ExceptionHandler
 import javax.inject.Singleton
 import javax.validation.ConstraintViolationException
 
-/**
- * Handles the Bean Validation errors adding theirs violations into request trailers (metadata)
- */
+
 @Singleton
 class ConstraintViolationExceptionHandler : ExceptionHandler<ConstraintViolationException> {
 

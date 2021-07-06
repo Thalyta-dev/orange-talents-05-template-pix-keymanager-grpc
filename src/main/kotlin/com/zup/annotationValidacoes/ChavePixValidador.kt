@@ -17,9 +17,7 @@ class ChavePixValidador: ConstraintValidator<ValidChavePix,PixRequestValida>{
         context: ConstraintValidatorContext
     ): Boolean {
 
-        println("entrei na validacao")
         if(value.tipoChave == TipoChave.ALEATORIA) return true
-
 
         return value.tipoChave.validaChave(value.valorChave!!)
     }

@@ -21,14 +21,15 @@ class PixRequestValida(
 
     ) {
 
-    fun toModel(dadosClient: InfoClienteResponse): ChavePix {
+    fun toModel(dadosClient: InfoClienteResponse, repository: PixRepository): ChavePix {
 
-        val conta = ContaRequest(dadosClient)
+        val contaExistente = repository.findByConta(dadosClient.numero, dadosClient.tipo)
+
         return ChavePix(
             tipoChave = tipoChave,
             valorChave = if (this.tipoChave != TipoChave.ALEATORIA) this.valorChave!! else UUID.randomUUID().toString(),
             tipoConta = tipoConta,
-            conta = conta.toModel(),
+            conta = contaExistente ?: ContaRequest(dadosClient).toModel(),
             clientId = clientId.toString()
 
         )
