@@ -19,24 +19,18 @@ class EndpointRegistra() : PixRegistraServiceGrpc.PixRegistraServiceImplBase() {
     override fun cadastraChave(request: PixRegistraRequest?, responseObserver: StreamObserver<PixRegistraResponse>?) {
 
 
-        val requestValidada = request?.toValida()
+        request?.toValida().run {  service.cadastraChave(this!!) }.let { cadastraChave ->
 
-        var cadastraChave = service.cadastraChave(requestValidada!!)
+            responseObserver!!.onNext(PixRegistraResponse.newBuilder()
 
+                .setClientId(cadastraChave?.clientId.toString())
+                .setPixId(cadastraChave?.pixId.toString()).build())
 
-        responseObserver!!.onNext(PixRegistraResponse.newBuilder().setClientId(cadastraChave?.clientId.toString()).setPixId(cadastraChave?.pixId.toString()).build())
-        responseObserver!!.onCompleted()
+            responseObserver!!.onCompleted()
+        }
+
     }
 
-    fun PixRegistraRequest.toValida(): PixRequestValida {
-
-        return PixRequestValida(
-            clientId = this.idCliente,
-            tipoChave = TipoChave.valueOf(this.tipoChave.toString()),
-            valorChave = valorChave,
-            tipoConta = TipoConta.valueOf(tipoConta.toString())
-        )
-    }
 
 
 }

@@ -5,11 +5,17 @@ option java_package = "com.zup";
 option java_outer_classname = "Pix";
 option objc_class_prefix = "HLW";
 
-package com.zup;
+package br.com.zup;
 
 service PixRegistraService {
   rpc cadastraChave (PixRegistraRequest) returns (PixRegistraResponse) {}
+
 }
+
+service PixDeletaService {
+  rpc deletaChave (PixDeletaRequest) returns (PixDeletaResponse) {}
+}
+
 enum TipoChave{
   DEFAULT = 0;
   EMAIL = 1;
@@ -25,6 +31,15 @@ enum TipoConta{
   CONTA_POUPANCA = 2;
 
 }
+message PixDeletaRequest {
+  string clientId = 1;
+  string  pixId = 3;
+}
+
+message PixDeletaResponse {
+  string pixId = 1;
+}
+
 message PixRegistraRequest {
   string idCliente = 1;
   TipoChave tipoChave = 2;
@@ -34,5 +49,5 @@ message PixRegistraRequest {
 
 message PixRegistraResponse {
   string pixId = 1;
-  string clientId =2;
+  string clientId = 2;
 }

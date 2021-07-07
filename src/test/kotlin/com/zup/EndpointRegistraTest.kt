@@ -25,7 +25,7 @@ import javax.inject.Singleton
     rollback = false,
     transactionMode = TransactionMode.SINGLE_TRANSACTION
 )
-class PixTest(
+class EndpointRegistraTest(
     val grpcClient: PixRegistraServiceGrpc.PixRegistraServiceBlockingStub,
     val repository: PixRepository,
 ) {
@@ -150,7 +150,7 @@ class PixTest(
 
     @Test
     fun naoDeveGerarChavePixPoisClienteNaoExiste() {
-        
+
         val request = criaRequestClientInexistente()
 
         val response = assertThrows<StatusRuntimeException>
