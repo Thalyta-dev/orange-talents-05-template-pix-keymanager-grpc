@@ -1,6 +1,20 @@
 package com.zup.registraChave
 
-enum class TipoConta {
-     CONTA_CORRENTE, CONTA_POUPANCA
+import com.zup.servicosExternos.sistemaBbc.TypeAccount
 
+enum class TipoConta {
+    CONTA_CORRENTE {
+        override fun returnTipoContaBbc(): TypeAccount {
+            return TypeAccount.CACC
+        }
+
+    },
+    CONTA_POUPANCA {
+        override fun returnTipoContaBbc(): TypeAccount {
+            return TypeAccount.SVGS
+        }
+
+    };
+
+    abstract fun returnTipoContaBbc() : TypeAccount
 }

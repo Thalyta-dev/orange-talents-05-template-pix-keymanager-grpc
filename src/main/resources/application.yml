@@ -19,3 +19,4 @@ jpa:
 
 sistemaExternos:
   contasItau: ${CONTAS_ITAU:`http://localhost:9091/api/v1/clientes`}
+  bbc: ${BBC:`http://localhost:8082/api/v1/pix/keys`}

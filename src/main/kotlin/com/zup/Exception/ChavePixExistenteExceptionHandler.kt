@@ -8,7 +8,7 @@ import javax.inject.Singleton
 class ChavePixExistenteExceptionHandler: ExceptionHandler<ChavePixExistenteException> {
     override fun handle(e: ChavePixExistenteException): ExceptionHandler.StatusWithDetails {
         return ExceptionHandler.StatusWithDetails(
-            Status.ALREADY_EXISTS
+            Status.FAILED_PRECONDITION
                 .withDescription(e.message)
                 .withCause(e)
         )

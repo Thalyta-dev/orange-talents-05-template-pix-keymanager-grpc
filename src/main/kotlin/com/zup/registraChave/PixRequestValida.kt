@@ -3,7 +3,8 @@ package com.zup.registraChave
 
 import br.com.zup.edu.shared.validation.ValidUUID
 import com.zup.annotationValidacoes.ValidChavePix
-import com.zup.servicosExternos.sistemaItau.InfoClienteResponse
+import com.zup.servicosExternos.sistemaBbc.CreatePixKeyResponse
+import com.zup.servicosExternos.sistemaItau.InfoClienteResponseItauClient
 import io.micronaut.core.annotation.Introspected
 import java.util.*
 import javax.validation.constraints.NotBlank
@@ -21,13 +22,13 @@ class PixRequestValida(
 
     ) {
 
-    fun toModel(dadosClient: InfoClienteResponse, repository: PixRepository): ChavePix {
+    fun toModel(dadosClient: InfoClienteResponseItauClient, chavePixValor: CreatePixKeyResponse,repository: PixRepository): ChavePix {
 
-        val contaExistente = repository.findByConta(dadosClient.numero, dadosClient.tipo)
+        val contaExistente = repository.findByConta(dadosClient.numero, dadosClient.tipo.toString())
 
         return ChavePix(
             tipoChave = tipoChave,
-            valorChave = if (this.tipoChave != TipoChave.ALEATORIA) this.valorChave!! else UUID.randomUUID().toString(),
+            valorChave = chavePixValor.key,
             tipoConta = tipoConta,
             conta = contaExistente ?: ContaRequest(dadosClient).toModel(),
             clientId = clientId.toString()

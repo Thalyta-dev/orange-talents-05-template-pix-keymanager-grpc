@@ -2,7 +2,11 @@ package com.zup.registraChave
 
 import com.zup.Exception.ChavePixExistenteException
 import com.zup.Exception.ClienteNaoEncontradoException
+import com.zup.Exception.NaoConectouComServicoExternoException
+import com.zup.servicosExternos.sistemaBbc.BbcClient
+import com.zup.servicosExternos.sistemaBbc.CreatePixKeyRequest
 import com.zup.servicosExternos.sistemaItau.SistemaItau
+import io.micronaut.http.client.exceptions.HttpClientResponseException
 import io.micronaut.validation.Validated
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,6 +21,9 @@ open class PixRegistraService {
     lateinit var sistemaItau: SistemaItau
 
     @Inject
+    lateinit var sistemaBbc: BbcClient
+
+    @Inject
     lateinit var repository: PixRepository
 
 
@@ -26,19 +33,31 @@ open class PixRegistraService {
 
         if (repository.existsByValorChave(requestValidada.valorChave!!)) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente")
 
-        val dadosClient =sistemaItau.retornaDadosCliente(requestValidada.clientId.toString(), requestValidada.tipoConta.toString()).run {
+        val dadosClient =
+            sistemaItau.retornaDadosCliente(requestValidada.clientId.toString(), requestValidada.tipoConta.toString())
+                .run {
                     this ?: throw  ClienteNaoEncontradoException("Cliente não encontrado")
                 }
 
 
-        requestValidada.toModel(dadosClient = dadosClient, repository).run {
-            repository.save(this).let { chavePix ->
-                return chavePix
+
+        try {
+
+            return sistemaBbc.cadastraChavePix(CreatePixKeyRequest(dadosClient, requestValidada))?.run {
+                requestValidada.toModel(dadosClient, this.body()!!, repository).let { chave ->
+                    repository.save(chave)
+                }
             }
+
+        } catch (e: HttpClientResponseException) {
+
+            if (e.status.code == 422) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente no BBC")
+
+            throw NaoConectouComServicoExternoException("Não foi possivel conectar com o BBC")
+
         }
 
     }
-
 
 }
 

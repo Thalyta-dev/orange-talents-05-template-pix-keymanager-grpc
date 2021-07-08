@@ -10,7 +10,7 @@ interface SistemaItau {
 
     @Get("/{clienteId}/contas")
     fun retornaDadosCliente(@PathVariable clienteId: String,
-                            @QueryValue tipo: String): InfoClienteResponse?
+                            @QueryValue tipo: String): InfoClienteResponseItauClient?
 
 
 }

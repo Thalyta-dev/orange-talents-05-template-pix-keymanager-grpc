@@ -1,10 +1,8 @@
 package com.zup.registraChave
 
-import com.zup.servicosExternos.sistemaItau.InfoClienteResponse
-import com.zup.servicosExternos.sistemaItau.InstituicaoResponse
+import com.zup.servicosExternos.sistemaItau.InfoClienteResponseItauClient
 import com.zup.servicosExternos.sistemaItau.TitularResponse
 import io.micronaut.core.annotation.Introspected
-import javax.persistence.Embedded
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
@@ -12,11 +10,11 @@ import javax.validation.constraints.NotNull
 @Introspected
 class ContaRequest(
 
-    val dadosClient: InfoClienteResponse
+    val dadosClient: InfoClienteResponseItauClient
 
 ) {
 
-    @field: NotBlank val tipo: String = dadosClient.tipo
+    @field: NotBlank val tipo: TipoConta = dadosClient.tipo
 
     @field: NotNull val instituicao= dadosClient.instituicao
 

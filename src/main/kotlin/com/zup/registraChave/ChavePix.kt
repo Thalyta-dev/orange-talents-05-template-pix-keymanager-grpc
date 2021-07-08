@@ -28,7 +28,7 @@ class ChavePix(
     @field:Id
     @field:GeneratedValue
     @Column(nullable = false,length = 16)
-    lateinit var pixId: UUID
+    var pixId: UUID? = null
 
 
 }

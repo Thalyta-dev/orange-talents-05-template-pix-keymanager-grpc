@@ -5,7 +5,7 @@ import javax.persistence.Embeddable
 import javax.validation.constraints.NotBlank
 
 @Introspected
-data class InstituicaoResponse(
+data class InstituicaoResponseItauClient(
     @field: NotBlank val nome: String,
     @field: NotBlank val ispb: String
 ) {

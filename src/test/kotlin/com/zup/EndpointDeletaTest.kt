@@ -1,17 +1,16 @@
 package com.zup;
 
 
+import com.zup.Exception.ValorNaoEncontradoException
 import com.zup.registraChave.*
 import com.zup.registraChave.TipoChave
 import com.zup.registraChave.TipoConta
-import com.zup.servicosExternos.sistemaItau.Instituicao
-import com.zup.servicosExternos.sistemaItau.Titular
-import io.grpc.ManagedChannel
+import com.zup.servicosExternos.sistemaBbc.*
+import com.zup.servicosExternos.sistemaItau.*
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import io.micronaut.context.annotation.Factory
-import io.micronaut.grpc.annotation.GrpcChannel
-import io.micronaut.grpc.server.GrpcServerChannel
+import io.micronaut.http.HttpResponse
+import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.Assertions
@@ -19,8 +18,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito
+import java.time.LocalDateTime
 import java.util.*
-import javax.inject.Singleton
 
 @MicronautTest(
     transactional = false,
@@ -29,7 +29,8 @@ import javax.inject.Singleton
 )
 class EndpointDeletaTest(
     val grpcClient: PixDeletaServiceGrpc.PixDeletaServiceBlockingStub,
-    val repository: PixRepository
+    val repository: PixRepository,
+    val sistemaBbcClient: BbcClient
 ) {
 
     lateinit var chavePix: ChavePix
@@ -45,7 +46,14 @@ class EndpointDeletaTest(
     fun deveExcluirChavePix() {
 
 
+
         val request = criaRequest()
+
+
+        if (request != null) {
+            Mockito.`when`(
+                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.ok<Any>())
+        }
 
         grpcClient.deletaChave(request)
 
@@ -55,6 +63,26 @@ class EndpointDeletaTest(
 
         }
 
+    }
+    @Test
+    fun naoDeveExcluirChavePoisNaoExisteNoBbc() {
+
+
+        val request = criaRequest()
+
+        if (request != null) {
+            Mockito.`when`(
+                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.notFound<Any>())
+        }
+
+        assertThrows<StatusRuntimeException> { grpcClient.deletaChave(request) }.let { response ->
+
+            assertEquals(Status.NOT_FOUND.code, response.status.code)
+            assertEquals("A chave requerida nao foi encontrada no Bbc", response.status.description)
+
+
+
+        }
     }
 
     @Test
@@ -107,7 +135,7 @@ class EndpointDeletaTest(
         return ChavePix(
             clientId = "5260263c-a3c1-4727-ae32-3bdb2538841b",
             conta = Conta(
-                tipo = "CONTA_CORRENTE",
+                tipo = TipoConta.CONTA_CORRENTE,
                 instituicao = Instituicao("ITAÚ UNIBANCO S.A.", "60701190"),
                 agencia = "0001",
                 numero = "123455",
@@ -149,7 +177,7 @@ class EndpointDeletaTest(
         var chavePixExistenteNoBanco = ChavePix(
             clientId = "1758f67e-df26-11eb-ba80-0242ac130004",
             conta = Conta(
-                tipo = "CONTA_CORRENTE",
+                tipo = TipoConta.CONTA_CORRENTE,
                 instituicao = Instituicao("ITAÚ UNIBANCO S.A.", "60701190"),
                 agencia = "0001",
                 numero = "123455",
@@ -170,16 +198,56 @@ class EndpointDeletaTest(
        }
 
 
+
+
     }
 
-    @Factory
-    class Clients {
-        @Singleton
-        fun blockStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): PixDeletaServiceGrpc.PixDeletaServiceBlockingStub {
-            return PixDeletaServiceGrpc.newBlockingStub((channel))
+    fun criaRetornoItauValida(): InfoClienteResponseItauClient {
 
-        }
+        return InfoClienteResponseItauClient(
+            tipo = TipoConta.CONTA_CORRENTE,
+            titular = TitularResponse(
+                id = "5260263c-a3c1-4727-ae32-3bdb2538841b",
+                nome = "Rafael M C Ponte",
+                cpf = "02467781054"
+            ),
+            instituicao = InstituicaoResponseItauClient("ITAÚ UNIBANCO S.A.", "60701190"),
+            agencia = "0001",
+            numero = "123455",
+        )
     }
+
+    fun criaRetornoBbcValido(): HttpResponse<CreatePixKeyResponse> {
+
+        return HttpResponse.created(
+            CreatePixKeyResponse(
+                key = "thalytamaely@hotmail.com",
+                bankAccount = BankAccountBbcResponse(
+                    "60701190",
+                    "0001",
+                    "123455",
+                    TypeAccount.CACC
+                ),
+                createdAt = LocalDateTime.now(),
+                keyType = KeyType.EMAIL,
+                owner = OwnerResponse(
+                    type = TypePerson.NATURAL_PERSON,
+                    "Rafael M C Ponte",
+                    "02467781054",
+                )
+            )
+        )
+
+    }
+    @MockBean(BbcClient::class)
+    fun `sistemaBbcMock`(): BbcClient {
+
+        return Mockito.mock(BbcClient::class.java)
+
+    }
+
+
+
 
 
 }

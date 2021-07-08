@@ -5,17 +5,17 @@ import io.grpc.Status
 import javax.inject.Singleton
 
 @Singleton
-class ChaveNaoPertenceClienteExceptionHandler: ExceptionHandler<ClienteNaoPertenceClienteException> {
-    override fun handle(e: ClienteNaoPertenceClienteException): ExceptionHandler.StatusWithDetails {
+class ClienteNaoTemPermissaoExceptionHandler: ExceptionHandler<ClienteNaoTemPermissaoException> {
+    override fun handle(e: ClienteNaoTemPermissaoException): ExceptionHandler.StatusWithDetails {
         return ExceptionHandler.StatusWithDetails(
-            Status.INVALID_ARGUMENT
+            Status.PERMISSION_DENIED
                 .withDescription(e.message)
                 .withCause(e)
         )
     }
 
     override fun supports(e: Exception): Boolean {
-        return e is ClienteNaoPertenceClienteException
+        return e is ClienteNaoTemPermissaoException
     }
 
 }

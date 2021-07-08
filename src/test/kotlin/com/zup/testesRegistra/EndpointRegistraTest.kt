@@ -1,16 +1,19 @@
-package com.zup
+package com.zup.testesRegistra
 
+import com.zup.PixRegistraRequest
+import com.zup.PixRegistraServiceGrpc
+import com.zup.TipoChave
+import com.zup.TipoConta
 import com.zup.registraChave.ChavePix
 import com.zup.registraChave.Conta
 import com.zup.registraChave.PixRepository
-import com.zup.servicosExternos.sistemaItau.Instituicao
-import com.zup.servicosExternos.sistemaItau.Titular
-import io.grpc.ManagedChannel
+import com.zup.registraChave.toValida
+import com.zup.servicosExternos.sistemaBbc.*
+import com.zup.servicosExternos.sistemaItau.*
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
-import io.micronaut.context.annotation.Factory
-import io.micronaut.grpc.annotation.GrpcChannel
-import io.micronaut.grpc.server.GrpcServerChannel
+import io.micronaut.http.HttpResponse
+import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.AfterEach
@@ -18,7 +21,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import javax.inject.Singleton
+import org.mockito.Mockito
+import java.lang.reflect.Type
+import java.time.LocalDateTime
+import javax.inject.Inject
 
 @MicronautTest(
     transactional = false,
@@ -27,8 +33,13 @@ import javax.inject.Singleton
 )
 class EndpointRegistraTest(
     val grpcClient: PixRegistraServiceGrpc.PixRegistraServiceBlockingStub,
-    val repository: PixRepository,
+    val sistemaItau: SistemaItau,
+    val sistemaBbcClient: BbcClient
 ) {
+
+    @Inject
+    lateinit var repository: PixRepository
+
 
     @AfterEach
     fun cleanUp() {
@@ -47,13 +58,16 @@ class EndpointRegistraTest(
         { grpcClient.cadastraChave(request) }
 
         with(response) {
-            assertEquals(Status.INVALID_ARGUMENT.code,
-                response.status.code)
+            assertEquals(
+                Status.INVALID_ARGUMENT.code,
+                response.status.code
+            )
 
             assertEquals("Dados inválidos", response.status.description)
         }
 
     }
+
     @Test
     fun naoDeveGerarChavePixPoisDadosInvalidos() {
 
@@ -65,13 +79,16 @@ class EndpointRegistraTest(
         { grpcClient.cadastraChave(request) }
 
         with(response) {
-            assertEquals(Status.INVALID_ARGUMENT.code,
-                response.status.code)
+            assertEquals(
+                Status.INVALID_ARGUMENT.code,
+                response.status.code
+            )
 
             assertEquals("Dados inválidos", response.status.description)
         }
 
     }
+
     @Test
     fun naoDeveGerarChavePoisTipoChaveCpfMasValorTelefone() {
 
@@ -82,8 +99,10 @@ class EndpointRegistraTest(
         { grpcClient.cadastraChave(request) }
 
         with(response) {
-            assertEquals(Status.INVALID_ARGUMENT.code,
-                response.status.code)
+            assertEquals(
+                Status.INVALID_ARGUMENT.code,
+                response.status.code
+            )
 
             assertEquals("Dados inválidos", response.status.description)
         }
@@ -105,14 +124,32 @@ class EndpointRegistraTest(
 
         repository.save(criaChavePix())
 
-        var request = criaRequestContaPoupanca()
+        val request = criaRequestContaPoupanca()
+
+        println(request.toString())
+
+        Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
+            .thenReturn(criaRetornoItauValidaPoupanca())
+
+        Mockito.`when`(
+            sistemaBbcClient.cadastraChavePix(
+                CreatePixKeyRequest(
+                    criaRetornoItauValida(),
+                    request.toValida()
+                )
+            )
+        )
+            .thenReturn(criaRetornoBbcValido())
+
+
 
         val response = grpcClient.cadastraChave(request)
+        println(response.toString())
 
         with(response) {
             assertNotNull(response.clientId)
             assertNotNull(response.pixId)
-            assertEquals(response.clientId, request?.idCliente)
+            assertEquals(request.idCliente, response.clientId)
         }
 
     }
@@ -120,30 +157,79 @@ class EndpointRegistraTest(
     @Test
     fun deveCadastrarChavePix() {
 
+
         val request = criaRequest()
+        Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
+            .thenReturn(criaRetornoItauValida())
+
+        Mockito.`when`(
+            sistemaBbcClient.cadastraChavePix(
+                CreatePixKeyRequest(
+                    criaRetornoItauValida(),
+                    request.toValida()
+                )
+            )
+        )
+            .thenReturn(criaRetornoBbcValido())
+
 
         val response = grpcClient.cadastraChave(request)
 
         with(response) {
             assertNotNull(response.clientId)
             assertNotNull(response.pixId)
-            assertEquals(response.clientId, request?.idCliente)
+            assertEquals(response.clientId, request.idCliente)
         }
 
     }
 
     @Test
-    fun naoDeveGerarChavePixPoisJaExiste() {
+    fun naoDeveGerarChavePixPoisJaExisteNoSistema() {
+
 
         repository.save(criaChavePix())
 
         val request = criaRequest()
+        Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
+            .thenReturn(criaRetornoItauValida())
+
         val response = assertThrows<StatusRuntimeException>
         { grpcClient.cadastraChave(request) }
 
         with(response) {
-            assertEquals(Status.ALREADY_EXISTS.code, response.status.code)
+            assertEquals(Status.FAILED_PRECONDITION.code, response.status.code)
             assertEquals("Chave Pix '${request?.valorChave}' existente", response.status.description)
+        }
+
+    }
+
+    @Test
+    fun naoDeveGerarChavePixPoisJaExisteNoBbc() {
+
+
+        repository.save(criaChavePix())
+
+        val request = criaRequest()
+        Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
+            .thenReturn(criaRetornoItauValida())
+
+        Mockito.`when`(
+            sistemaBbcClient.cadastraChavePix(
+                CreatePixKeyRequest(
+                    criaRetornoItauValida(),
+                    request.toValida()
+                )
+            )
+        )
+            .thenReturn(HttpResponse.unprocessableEntity<CreatePixKeyResponse>())
+
+
+        val response = assertThrows<StatusRuntimeException>
+        { grpcClient.cadastraChave(request) }
+
+        with(response) {
+            assertEquals(Status.FAILED_PRECONDITION.code, response.status.code)
+            assertEquals("Chave Pix '${request.valorChave}' existente", response.status.description)
         }
 
     }
@@ -163,12 +249,12 @@ class EndpointRegistraTest(
 
     }
 
-    fun criaChavePix(): ChavePix{
+    fun criaChavePix(): ChavePix {
 
         return ChavePix(
             clientId = "5260263c-a3c1-4727-ae32-3bdb2538841b",
             conta = Conta(
-                tipo = "CONTA_CORRENTE",
+                tipo = com.zup.registraChave.TipoConta.CONTA_CORRENTE,
                 instituicao = Instituicao("ITAÚ UNIBANCO S.A.", "60701190"),
                 agencia = "0001",
                 numero = "123455",
@@ -180,6 +266,58 @@ class EndpointRegistraTest(
 
         )
     }
+
+    fun criaRetornoItauValida(): InfoClienteResponseItauClient {
+
+        return InfoClienteResponseItauClient(
+            tipo = com.zup.registraChave.TipoConta.CONTA_CORRENTE,
+            titular = TitularResponse(
+                id = "5260263c-a3c1-4727-ae32-3bdb2538841b",
+                nome = "Rafael M C Ponte",
+                cpf = "02467781054"
+            ),
+            instituicao = InstituicaoResponseItauClient("ITAÚ UNIBANCO S.A.", "60701190"),
+            agencia = "0001",
+            numero = "123455",
+        )
+    }
+
+    fun criaRetornoBbcValido(): HttpResponse<CreatePixKeyResponse> {
+
+        return HttpResponse.created(CreatePixKeyResponse(
+            key = "thalytamaely@hotmail.com",
+            bankAccount = BankAccountBbcResponse(
+                "60701190",
+                "0001",
+                "123455",
+                    TypeAccount.CACC
+            ),
+            createdAt = LocalDateTime.now(),
+            keyType = KeyType.EMAIL,
+            owner = OwnerResponse(
+                type = TypePerson.NATURAL_PERSON,
+                 "Rafael M C Ponte",
+                "02467781054",
+            )
+        ))
+
+    }
+
+    fun criaRetornoItauValidaPoupanca(): InfoClienteResponseItauClient {
+
+        return InfoClienteResponseItauClient(
+            tipo = com.zup.registraChave.TipoConta.CONTA_POUPANCA,
+            titular = TitularResponse(
+                id = "5260263c-a3c1-4727-ae32-3bdb2538841b",
+                nome = "Rafael M C Ponte",
+                cpf = "02467781054"
+            ),
+            instituicao = InstituicaoResponseItauClient("ITAÚ UNIBANCO S.A.", "60701190"),
+            agencia = "0001",
+            numero = "123455",
+        )
+    }
+
 
     fun criaRequest(): PixRegistraRequest? {
 
@@ -207,7 +345,7 @@ class EndpointRegistraTest(
         return PixRegistraRequest.newBuilder()
             .setIdCliente("5260263c-a3c1-4727-ae32-3bdb2538841b")
             .setTipoChave(TipoChave.CPF)
-            .setValorChave("124-853-036.57")
+            .setValorChave("123-853-036.57")
             .setTipoConta(TipoConta.CONTA_POUPANCA).build()
 
     }
@@ -233,18 +371,19 @@ class EndpointRegistraTest(
 
     }
 
+    @MockBean(SistemaItau::class)
+    fun `sistemaItauMock`(): SistemaItau {
 
-    @Factory
-    class Clients {
-        @Singleton
-        fun blockStub(@GrpcChannel(GrpcServerChannel.NAME) channel: ManagedChannel): PixRegistraServiceGrpc.PixRegistraServiceBlockingStub {
-            return PixRegistraServiceGrpc.newBlockingStub((channel))
+        return Mockito.mock(SistemaItau::class.java)
 
-        }
     }
 
+    @MockBean(BbcClient::class)
+    fun `sistemaBbcMock`(): BbcClient {
 
+        return Mockito.mock(BbcClient::class.java)
 
+    }
 
 
 }
