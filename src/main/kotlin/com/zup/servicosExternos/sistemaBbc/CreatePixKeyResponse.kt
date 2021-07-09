@@ -3,7 +3,7 @@ package com.zup.servicosExternos.sistemaBbc
 import java.time.LocalDateTime
 import javax.validation.constraints.NotBlank
 
-class CreatePixKeyResponse(
+data class CreatePixKeyResponse(
     @field: NotBlank
     val keyType: KeyType,
     @field: NotBlank

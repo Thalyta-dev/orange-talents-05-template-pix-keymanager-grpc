@@ -11,6 +11,10 @@ enum class KeyType {
 
         }
 
+        override fun retornaTipoContaPixProto(): com.zup.TipoChave {
+            return com.zup.TipoChave.CPF
+        }
+
     },
     RANDOM {
 
@@ -19,12 +23,20 @@ enum class KeyType {
             return TipoChave.ALEATORIA
 
         }
+
+        override fun retornaTipoContaPixProto(): com.zup.TipoChave {
+                return com.zup.TipoChave.ALEATORIA
+        }
     },
     EMAIL {
         override fun retornaTipoContaPix(): TipoChave {
 
             return TipoChave.EMAIL
 
+        }
+
+        override fun retornaTipoContaPixProto(): com.zup.TipoChave {
+            return com.zup.TipoChave.EMAIL
         }
     },
 
@@ -35,7 +47,13 @@ enum class KeyType {
             return TipoChave.TELEFONE
 
         }
+
+        override fun retornaTipoContaPixProto(): com.zup.TipoChave {
+            return com.zup.TipoChave.TELEFONE
+        }
     };
 
     abstract fun retornaTipoContaPix(): TipoChave
+    abstract fun retornaTipoContaPixProto(): com.zup.TipoChave
+
 }

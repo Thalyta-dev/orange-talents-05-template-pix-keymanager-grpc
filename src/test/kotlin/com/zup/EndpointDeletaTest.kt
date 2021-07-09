@@ -70,15 +70,38 @@ class EndpointDeletaTest(
 
         val request = criaRequest()
 
-        if (request != null) {
+
             Mockito.`when`(
                 sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.notFound<Any>())
-        }
+
+
 
         assertThrows<StatusRuntimeException> { grpcClient.deletaChave(request) }.let { response ->
 
             assertEquals(Status.NOT_FOUND.code, response.status.code)
             assertEquals("A chave requerida nao foi encontrada no Bbc", response.status.description)
+
+
+
+        }
+    }
+
+    @Test
+    fun naoDeveExcluirChavePoisNaoTemPermissaoNoBbc() {
+
+
+        val request = criaRequest()
+
+
+        Mockito.`when`(
+            sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.unauthorized<Any>())
+
+
+
+        assertThrows<StatusRuntimeException> { grpcClient.deletaChave(request) }.let { response ->
+
+            assertEquals(Status.PERMISSION_DENIED.code, response.status.code)
+            assertEquals("Acesso no bbc foi negado", response.status.description)
 
 
 

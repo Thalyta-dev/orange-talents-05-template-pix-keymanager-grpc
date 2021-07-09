@@ -4,8 +4,8 @@ import com.zup.registraChave.ChavePix
 import io.micronaut.core.annotation.Introspected
 
 @Introspected
-class DeletePixKeyRequest(
-    chavePix: ChavePix
+data class DeletePixKeyRequest(
+    val chavePix: ChavePix
 ) {
 
     val key = chavePix.valorChave

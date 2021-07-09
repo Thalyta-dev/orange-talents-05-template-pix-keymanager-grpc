@@ -12,7 +12,7 @@ import javax.validation.constraints.Size
 
 @ValidChavePix
 @Introspected
-class PixRequestValida(
+data class PixRequestValida(
 
 
     @field: NotBlank @field: ValidUUID val clientId: String,

@@ -7,6 +7,8 @@ option objc_class_prefix = "HLW";
 
 package br.com.zup;
 
+import "google/protobuf/timestamp.proto";
+
 service PixRegistraService {
   rpc cadastraChave (PixRegistraRequest) returns (PixRegistraResponse) {}
 
@@ -14,6 +16,11 @@ service PixRegistraService {
 
 service PixDeletaService {
   rpc deletaChave (PixDeletaRequest) returns (PixDeletaResponse) {}
+}
+
+service PixConsultaService {
+  rpc consulta (PixConsultaRequest) returns (PixConsultaResponse) {}
+  rpc consultaParaSistemasExternos(PixConsultaPorChaveRequest) returns (PixConsultaResponse){}
 }
 
 enum TipoChave{
@@ -25,15 +32,52 @@ enum TipoChave{
 
 }
 
+
+
 enum TipoConta{
   DEFAULTCONTA = 0;
   CONTA_CORRENTE = 1;
   CONTA_POUPANCA = 2;
 
 }
+
 message PixDeletaRequest {
   string clientId = 1;
   string  pixId = 3;
+}
+
+message PixConsultaRequest {
+
+  string clientId = 1;
+  string  pixId = 2;
+
+}
+ message PixConsultaPorChaveRequest{
+   string chavePix = 1;
+ }
+message Titular {
+  string nome = 1;
+  string  cpf = 2;
+}
+
+message Conta {
+  string nomeInstituicao = 1;
+  string  agencia = 2;
+  string  numero = 3;
+  TipoConta tipoConta = 4;
+
+
+}
+
+message PixConsultaResponse {
+  string clientId = 6;
+  string  pixId = 7;
+  TipoChave tipoChave = 1;
+  string  valorChave = 2;
+  Titular titular = 3;
+  Conta conta = 5;
+  google.protobuf.Timestamp criadoEm = 4;
+
 }
 
 message PixDeletaResponse {

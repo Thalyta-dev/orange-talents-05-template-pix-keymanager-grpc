@@ -1,14 +1,12 @@
 package com.zup.servicosExternos.sistemaBbc
 
-import com.zup.registraChave.ChavePix
 import com.zup.registraChave.PixRequestValida
-import com.zup.registraChave.TipoChave
 import com.zup.servicosExternos.sistemaItau.InfoClienteResponseItauClient
 import io.micronaut.core.annotation.Introspected
 
 
 @Introspected
-class CreatePixKeyRequest(
+data class CreatePixKeyRequest(
 
     val dadosClient: InfoClienteResponseItauClient,
     val chavePix: PixRequestValida

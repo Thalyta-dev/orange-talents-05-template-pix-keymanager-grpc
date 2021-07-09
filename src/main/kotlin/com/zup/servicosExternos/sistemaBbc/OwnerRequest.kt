@@ -4,7 +4,7 @@ import com.zup.servicosExternos.sistemaItau.InfoClienteResponseItauClient
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
-class OwnerRequest(
+data class OwnerRequest(
 
         val dadosClient: InfoClienteResponseItauClient
 

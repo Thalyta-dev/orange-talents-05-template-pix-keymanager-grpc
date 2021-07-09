@@ -31,7 +31,9 @@ open class PixRegistraService {
     fun cadastraChave(@Valid requestValidada: PixRequestValida): ChavePix? {
 
 
-        if (repository.existsByValorChave(requestValidada.valorChave!!)) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente")
+        val findByValorChave = repository.findByValorChave(requestValidada.valorChave!!)
+
+        if(findByValorChave.isPresent) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente")
 
         val dadosClient =
             sistemaItau.retornaDadosCliente(requestValidada.clientId.toString(), requestValidada.tipoConta.toString())
@@ -43,11 +45,13 @@ open class PixRegistraService {
 
         try {
 
-            return sistemaBbc.cadastraChavePix(CreatePixKeyRequest(dadosClient, requestValidada))?.run {
-                requestValidada.toModel(dadosClient, this.body()!!, repository).let { chave ->
+            val retorno =  sistemaBbc.cadastraChavePix(CreatePixKeyRequest(dadosClient, requestValidada)).run {
+                 requestValidada.toModel(dadosClient, this.body()!!, repository).let { chave ->
                     repository.save(chave)
                 }
             }
+
+            return retorno
 
         } catch (e: HttpClientResponseException) {
 

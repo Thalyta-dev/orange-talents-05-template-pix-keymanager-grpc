@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito
-import java.lang.reflect.Type
 import java.time.LocalDateTime
 import javax.inject.Inject
 
@@ -109,15 +108,6 @@ class EndpointRegistraTest(
 
     }
 
-    private fun criaRequestValorChaveInvalido(): PixRegistraRequest? {
-
-        return PixRegistraRequest.newBuilder()
-            .setIdCliente("c56dfef4-7901-44fb-84e2-a2cefb157890")
-            .setTipoChave(TipoChave.CPF)
-            .setValorChave("34850850828")
-            .setTipoConta(TipoConta.CONTA_CORRENTE).build()
-
-    }
 
     @Test
     fun deveGerarChavePixPoisTipoDeContaDiferente() {
@@ -131,6 +121,8 @@ class EndpointRegistraTest(
         Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
             .thenReturn(criaRetornoItauValidaPoupanca())
 
+        val teste = criaRetornoBbcValido()
+
         Mockito.`when`(
             sistemaBbcClient.cadastraChavePix(
                 CreatePixKeyRequest(
@@ -139,8 +131,7 @@ class EndpointRegistraTest(
                 )
             )
         )
-            .thenReturn(criaRetornoBbcValido())
-
+            .thenReturn(teste)
 
 
         val response = grpcClient.cadastraChave(request)
@@ -152,6 +143,7 @@ class EndpointRegistraTest(
             assertEquals(request.idCliente, response.clientId)
         }
 
+
     }
 
     @Test
@@ -159,8 +151,11 @@ class EndpointRegistraTest(
 
 
         val request = criaRequest()
+
+
         Mockito.`when`(sistemaItau.retornaDadosCliente(request!!.idCliente, request.tipoConta.toString()))
             .thenReturn(criaRetornoItauValida())
+
 
         Mockito.`when`(
             sistemaBbcClient.cadastraChavePix(
@@ -180,8 +175,8 @@ class EndpointRegistraTest(
             assertNotNull(response.pixId)
             assertEquals(response.clientId, request.idCliente)
         }
-
     }
+
 
     @Test
     fun naoDeveGerarChavePixPoisJaExisteNoSistema() {
@@ -249,6 +244,16 @@ class EndpointRegistraTest(
 
     }
 
+    private fun criaRequestValorChaveInvalido(): PixRegistraRequest? {
+
+        return PixRegistraRequest.newBuilder()
+            .setIdCliente("c56dfef4-7901-44fb-84e2-a2cefb157890")
+            .setTipoChave(TipoChave.CPF)
+            .setValorChave("34850850828")
+            .setTipoConta(TipoConta.CONTA_CORRENTE).build()
+
+    }
+
     fun criaChavePix(): ChavePix {
 
         return ChavePix(
@@ -284,22 +289,24 @@ class EndpointRegistraTest(
 
     fun criaRetornoBbcValido(): HttpResponse<CreatePixKeyResponse> {
 
-        return HttpResponse.created(CreatePixKeyResponse(
-            key = "thalytamaely@hotmail.com",
-            bankAccount = BankAccountBbcResponse(
-                "60701190",
-                "0001",
-                "123455",
+        return HttpResponse.created(
+            CreatePixKeyResponse(
+                key = "thalytamaely@hotmail.com",
+                bankAccount = BankAccountBbcResponse(
+                    "60701190",
+                    "0001",
+                    "123455",
                     TypeAccount.CACC
-            ),
-            createdAt = LocalDateTime.now(),
-            keyType = KeyType.EMAIL,
-            owner = OwnerResponse(
-                type = TypePerson.NATURAL_PERSON,
-                 "Rafael M C Ponte",
-                "02467781054",
+                ),
+                createdAt = LocalDateTime.now(),
+                keyType = KeyType.EMAIL,
+                owner = OwnerResponse(
+                    type = TypePerson.NATURAL_PERSON,
+                    "Rafael M C Ponte",
+                    "02467781054",
+                )
             )
-        ))
+        )
 
     }
 

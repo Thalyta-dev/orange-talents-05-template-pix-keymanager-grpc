@@ -3,7 +3,7 @@ package com.zup.servicosExternos.sistemaBbc
 import javax.validation.constraints.NotBlank
 import javax.validation.constraints.NotNull
 
-class OwnerResponse(
+data class OwnerResponse(
 
     @field: NotNull val type: TypePerson,
     @field: NotBlank val name: String,
