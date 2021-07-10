@@ -33,16 +33,12 @@ class PixDeletaService(
 
         ).run { this ?: throw ClienteNaoPertenceClienteException("A chave nao pertence ao cliente") }
 
-        try {
 
-            sistemaBbc.deletarChavePix(DeletePixKeyRequest(chaveEncontrada), chaveEncontrada.valorChave)
-        }catch (e: HttpClientResponseException){
-            if(e.status.code == 404) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada no Bbc")
-            if(e.status.code == 403) throw ClienteNaoTemPermissaoException("Acesso no bbc foi negado")
-
-
-        }
-
+            sistemaBbc.deletarChavePix(DeletePixKeyRequest(chaveEncontrada), chaveEncontrada.valorChave).run {
+                if(this.status.code == 404) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada no Bbc")
+                if(this.status.code == 403) throw ClienteNaoTemPermissaoException("Acesso no bbc foi negado")
+            }
+        
         repository.deleteById(chaveEncontrada.pixId!!)
 
 

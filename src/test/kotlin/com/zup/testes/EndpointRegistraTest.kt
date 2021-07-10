@@ -1,4 +1,4 @@
-package com.zup.testesRegistra
+package com.zup.testes
 
 import com.zup.PixRegistraRequest
 import com.zup.PixRegistraServiceGrpc

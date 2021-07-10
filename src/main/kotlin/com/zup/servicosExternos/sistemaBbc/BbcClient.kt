@@ -13,7 +13,7 @@ interface BbcClient {
     fun cadastraChavePix(@Body dadosCliente: CreatePixKeyRequest): HttpResponse<CreatePixKeyResponse>
 
     @Delete(value = "/{key}",produces = [MediaType.APPLICATION_XML], consumes = [MediaType.APPLICATION_XML])
-    fun deletarChavePix(@Body dadosCliente: DeletePixKeyRequest, @PathVariable key: String): HttpResponse<*>
+    fun deletarChavePix(@Body dadosCliente: DeletePixKeyRequest, @PathVariable key: String): HttpResponse<DeletePixKeyResponse>
 
     @Get(value = "/{key}",produces = [MediaType.APPLICATION_XML], consumes = [MediaType.APPLICATION_XML])
     fun consultaChave(@PathVariable key: String): HttpResponse<PixKeyDetailsResponse?>

@@ -1,7 +1,8 @@
-package com.zup;
+package com.zup.testes;
 
 
-import com.zup.Exception.ValorNaoEncontradoException
+import com.zup.PixDeletaRequest
+import com.zup.PixDeletaServiceGrpc
 import com.zup.registraChave.*
 import com.zup.registraChave.TipoChave
 import com.zup.registraChave.TipoConta
@@ -45,14 +46,12 @@ class EndpointDeletaTest(
     @Test
     fun deveExcluirChavePix() {
 
-
-
         val request = criaRequest()
-
 
         if (request != null) {
             Mockito.`when`(
-                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.ok<Any>())
+                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix),
+                    chavePix.valorChave)).thenReturn(HttpResponse.ok("Ola"))
         }
 
         grpcClient.deletaChave(request)
@@ -76,7 +75,12 @@ class EndpointDeletaTest(
 
 
 
-        assertThrows<StatusRuntimeException> { grpcClient.deletaChave(request) }.let { response ->
+        val response = assertThrows<StatusRuntimeException>
+
+        { grpcClient.deletaChave(request) }
+
+
+        with(response){
 
             assertEquals(Status.NOT_FOUND.code, response.status.code)
             assertEquals("A chave requerida nao foi encontrada no Bbc", response.status.description)
@@ -94,7 +98,8 @@ class EndpointDeletaTest(
 
 
         Mockito.`when`(
-            sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.unauthorized<Any>())
+            sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave))
+            .thenReturn(HttpResponse.unauthorized<Any>())
 
 
 
