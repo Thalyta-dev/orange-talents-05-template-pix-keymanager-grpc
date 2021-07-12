@@ -2,6 +2,7 @@ package com.zup.consulta
 
 import com.google.protobuf.Timestamp
 import com.zup.*
+import com.zup.consulta.listarChaves.PixConsultaTodasChavesValida
 import com.zup.registraChave.ChavePix
 import java.time.Instant
 import java.time.ZoneOffset
@@ -18,6 +19,13 @@ fun PixConsultaPorChaveRequest.toValida(): PixConsultaExternaValida {
         chavePix = chavePix
     )
 }
+
+fun PixConsultaChavesRequest.toValida(): PixConsultaTodasChavesValida {
+    return PixConsultaTodasChavesValida(
+        clientId = clientId
+    )
+}
+
 
 
 fun PixConsultaResponse.detalhesChavePix(chavePix: ChavePix): PixConsultaResponse {

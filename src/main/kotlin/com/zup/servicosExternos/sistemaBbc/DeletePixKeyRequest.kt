@@ -5,10 +5,12 @@ import io.micronaut.core.annotation.Introspected
 
 @Introspected
 data class DeletePixKeyRequest(
-    val chavePix: ChavePix
+
+    val key: String,
+    val participant: String
+
 ) {
 
-    val key = chavePix.valorChave
-    val participant = chavePix.conta.instituicao.ispb
+
 
 }

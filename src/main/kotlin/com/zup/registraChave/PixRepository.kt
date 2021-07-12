@@ -10,7 +10,11 @@ interface PixRepository: JpaRepository<ChavePix, UUID> {
 
     fun findByValorChave(chave: String): Optional<ChavePix>
 
-    fun existsByClientId(clienteId: String): Boolean
+    fun findByClientId(clienteId: String): Optional<ChavePix>
+
+    @Query(value = "SELECT * FROM chave_pix WHERE client_id = :clienteId", nativeQuery = true)
+    fun chavesClientes( clienteId: String): List<ChavePix>
+
 
     @Query(value = "SELECT * FROM chave_pix WHERE pix_id = :pixId and client_id = :clienteId", nativeQuery = true)
     fun clientDonoDaChave(pixId: UUID, clienteId: String): ChavePix?

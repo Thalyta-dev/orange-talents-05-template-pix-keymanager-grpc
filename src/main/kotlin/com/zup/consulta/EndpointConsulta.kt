@@ -1,10 +1,7 @@
 package com.zup.consulta
 
 import br.com.zup.edu.shared.grpc.ErrorHandler
-import com.zup.PixConsultaPorChaveRequest
-import com.zup.PixConsultaRequest
-import com.zup.PixConsultaResponse
-import com.zup.PixConsultaServiceGrpc
+import com.zup.*
 import io.grpc.stub.StreamObserver
 import javax.inject.Singleton
 
@@ -25,10 +22,6 @@ class EndpointConsulta(
 
         }
 
-
-
-
-
     }
 
     override fun consultaParaSistemasExternos(
@@ -44,6 +37,24 @@ class EndpointConsulta(
             responseObserver.onCompleted()
 
         }
+
+    }
+
+    override fun consultaTodasChavesCliente(
+        request: PixConsultaChavesRequest?,
+        responseObserver: StreamObserver<PixConsultaChavesResponse>?
+    ) {
+
+        val requestValida = request?.toValida()
+        val listaDeChaves = service.consultaTodasChaves(requestValida!!).let {
+            responseObserver!!.onNext(PixConsultaChavesResponse.newBuilder().addAllChavesPix(it).build())
+            responseObserver.onCompleted()
+
+        }
+
+
+
+
 
     }
 }

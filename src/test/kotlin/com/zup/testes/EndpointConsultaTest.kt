@@ -172,7 +172,6 @@ class EndpointConsultaTest(
 
     }
 
-
     @Test
     fun naodeveRetornarDetalhesPixPorIdPoisClienteNaoExiste(){
 
@@ -199,12 +198,14 @@ class EndpointConsultaTest(
 
         val request = criaRequestConsultaPorId()
 
-        val response = assertThrows<StatusRuntimeException> {
-            grpcClient.consulta(request)
-        }
 
         Mockito.`when`(
             sistemaBbcClient.consultaChave(chavePix.valorChave)).thenReturn(HttpResponse.notFound())
+
+
+        val response = assertThrows<StatusRuntimeException> {
+            grpcClient.consulta(request)
+        }
 
         with(response) {
             assertEquals(Status.NOT_FOUND.code, response.status.code)
@@ -250,6 +251,7 @@ class EndpointConsultaTest(
 
 
     }
+
     fun criaChavePix(): ChavePix {
 
         return ChavePix(
@@ -268,7 +270,6 @@ class EndpointConsultaTest(
         )
     }
 
-
     fun criaRequestConsultaPorId(): PixConsultaRequest? {
         return PixConsultaRequest.newBuilder()
             .setClientId( "5260263c-a3c1-4727-ae32-3bdb2538841b")
@@ -280,6 +281,7 @@ class EndpointConsultaTest(
         return PixConsultaPorChaveRequest.newBuilder()
             .setChavePix(chavePix.valorChave).build()
     }
+
     @MockBean(BbcClient::class)
     fun `sistemaBbcMock`(): BbcClient {
 

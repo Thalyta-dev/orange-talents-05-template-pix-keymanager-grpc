@@ -4,13 +4,12 @@ package com.zup.testes;
 import com.zup.PixDeletaRequest
 import com.zup.PixDeletaServiceGrpc
 import com.zup.registraChave.*
-import com.zup.registraChave.TipoChave
-import com.zup.registraChave.TipoConta
 import com.zup.servicosExternos.sistemaBbc.*
 import com.zup.servicosExternos.sistemaItau.*
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
 import io.micronaut.test.annotation.MockBean
 import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
@@ -48,11 +47,23 @@ class EndpointDeletaTest(
 
         val request = criaRequest()
 
-        if (request != null) {
-            Mockito.`when`(
-                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix),
-                    chavePix.valorChave)).thenReturn(HttpResponse.ok("Ola"))
-        }
+
+        Mockito.`when`(
+            sistemaBbcClient.deletarChavePix(
+                DeletePixKeyRequest(chavePix.valorChave, chavePix.conta.instituicao.ispb),
+                chavePix.valorChave
+            )
+        )
+            .thenReturn(
+                HttpResponse.ok(
+                    DeletePixKeyResponse(
+                        key = "thalyta@hotmail",
+                        participant = "607011",
+                        deletedAt = LocalDateTime.now()
+                    )
+                )
+            )
+
 
         grpcClient.deletaChave(request)
 
@@ -71,7 +82,8 @@ class EndpointDeletaTest(
 
 
             Mockito.`when`(
-                sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave)).thenReturn(HttpResponse.notFound<Any>())
+                sistemaBbcClient.deletarChavePix( DeletePixKeyRequest(chavePix.valorChave, chavePix.conta.instituicao.ispb), chavePix.valorChave))
+                .thenReturn(HttpResponse.notFound<DeletePixKeyResponse>())
 
 
 
@@ -98,8 +110,8 @@ class EndpointDeletaTest(
 
 
         Mockito.`when`(
-            sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix), chavePix.valorChave))
-            .thenReturn(HttpResponse.unauthorized<Any>())
+            sistemaBbcClient.deletarChavePix(DeletePixKeyRequest(chavePix.valorChave, chavePix.conta.instituicao.ispb), chavePix.valorChave))
+            .thenReturn(HttpResponse.status(HttpStatus.FORBIDDEN))
 
 
 
@@ -107,7 +119,6 @@ class EndpointDeletaTest(
 
             assertEquals(Status.PERMISSION_DENIED.code, response.status.code)
             assertEquals("Acesso no bbc foi negado", response.status.description)
-
 
 
         }
@@ -217,15 +228,13 @@ class EndpointDeletaTest(
 
         )
 
-       return repository.save(chavePixExistenteNoBanco).run {
+        return repository.save(chavePixExistenteNoBanco).run {
 
-           PixDeletaRequest.newBuilder()
-            .setClientId("1758f67e-df26-11eb-ba80-0242ac130004")
-            .setPixId(chavePix.pixId.toString()).build()
+            PixDeletaRequest.newBuilder()
+                .setClientId("1758f67e-df26-11eb-ba80-0242ac130004")
+                .setPixId(chavePix.pixId.toString()).build()
 
-       }
-
-
+        }
 
 
     }
@@ -267,15 +276,13 @@ class EndpointDeletaTest(
         )
 
     }
+
     @MockBean(BbcClient::class)
     fun `sistemaBbcMock`(): BbcClient {
 
         return Mockito.mock(BbcClient::class.java)
 
     }
-
-
-
 
 
 }

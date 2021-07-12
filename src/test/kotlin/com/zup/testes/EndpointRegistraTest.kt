@@ -108,7 +108,6 @@ class EndpointRegistraTest(
 
     }
 
-
     @Test
     fun deveGerarChavePixPoisTipoDeContaDiferente() {
 

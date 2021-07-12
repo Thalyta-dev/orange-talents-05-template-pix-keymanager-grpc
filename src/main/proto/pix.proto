@@ -5,7 +5,7 @@ option java_package = "com.zup";
 option java_outer_classname = "Pix";
 option objc_class_prefix = "HLW";
 
-package br.com.zup;
+package com.zup;
 
 import "google/protobuf/timestamp.proto";
 
@@ -21,6 +21,7 @@ service PixDeletaService {
 service PixConsultaService {
   rpc consulta (PixConsultaRequest) returns (PixConsultaResponse) {}
   rpc consultaParaSistemasExternos(PixConsultaPorChaveRequest) returns (PixConsultaResponse){}
+  rpc consultaTodasChavesCliente(PixConsultaChavesRequest) returns (PixConsultaChavesResponse){}
 }
 
 enum TipoChave{
@@ -52,6 +53,13 @@ message PixConsultaRequest {
   string  pixId = 2;
 
 }
+
+message PixConsultaChavesRequest {
+
+  string clientId = 1;
+
+}
+
  message PixConsultaPorChaveRequest{
    string chavePix = 1;
  }
@@ -69,6 +77,16 @@ message Conta {
 
 }
 
+message DetalhesChave {
+  string clientId = 1;
+  string  pixId = 2;
+  TipoChave tipoChave = 3;
+  string  valorChave = 4;
+  TipoConta tipoConta = 5;
+  google.protobuf.Timestamp criadoEm = 6;
+
+}
+
 message PixConsultaResponse {
   string clientId = 6;
   string  pixId = 7;
@@ -78,6 +96,10 @@ message PixConsultaResponse {
   Conta conta = 5;
   google.protobuf.Timestamp criadoEm = 4;
 
+}
+
+message PixConsultaChavesResponse {
+  repeated DetalhesChave chavesPix = 2;
 }
 
 message PixDeletaResponse {

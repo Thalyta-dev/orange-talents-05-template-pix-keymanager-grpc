@@ -1,8 +1,12 @@
 package com.zup.consulta
 
+import com.zup.DetalhesChave
 import com.zup.Exception.ClienteNaoPertenceClienteException
+import com.zup.Exception.NaoConectouComServicoExternoException
 import com.zup.Exception.ValorNaoEncontradoException
 import com.zup.PixConsultaResponse
+import com.zup.consulta.listarChaves.DetalhesChavePix
+import com.zup.consulta.listarChaves.PixConsultaTodasChavesValida
 import com.zup.registraChave.PixRepository
 import com.zup.servicosExternos.sistemaBbc.BbcClient
 import io.micronaut.validation.Validated
@@ -20,7 +24,7 @@ class PixConsultaService(
 
     fun consultaChavePorId(@Valid requestValida: PixConsultaValida): PixConsultaResponse? {
 
-        if (!repository.existsByClientId(requestValida.clientId)) throw ValorNaoEncontradoException("O cliente nao foi encontrado")
+        if (repository.findByClientId(requestValida.clientId).isEmpty) throw ValorNaoEncontradoException("O cliente nao foi encontrado")
 
         if (repository.findById(UUID.fromString(requestValida.pixId)).isEmpty) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada")
 
@@ -34,13 +38,12 @@ class PixConsultaService(
 
         return sistemaBbc.consultaChave(chaveEncontrada.valorChave).let {
             if (it.status.code == 404) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada no Bbc")
+            if (it.status.code != 200) throw  NaoConectouComServicoExternoException("Nao foi possivel fazer conexao com o BBC")
 
             it.body()?.toPixResponse(chaveEncontrada)
 
         }
 
-
-//            throw  NaoConectouComServicoExternoException("Nao foi possivel fazer conexao com o BBC")
 
 
     }
@@ -54,9 +57,19 @@ class PixConsultaService(
         }
 
         val consultaChave = sistemaBbc.consultaChave(valorChavePix.chavePix)
-        if (consultaChave.status.code == 404) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada no Bbc")
-        return consultaChave.body()?.toPixResponse()
 
+        if (consultaChave.status.code == 404) throw ValorNaoEncontradoException("A chave requerida nao foi encontrada no Bbc")
+
+        return consultaChave.body()?.toPixResponse()
+    }
+
+    fun consultaTodasChaves(@Valid requestValida: PixConsultaTodasChavesValida): List<DetalhesChave> {
+
+        return repository.chavesClientes(requestValida.clientId)
+            .map { chave -> DetalhesChavePix(chave) }
+            .map { detalhesChavePix -> detalhesChavePix.toResponse() }
 
     }
+
+
 }
