@@ -125,7 +125,7 @@ class EndpointRegistraTest(
         Mockito.`when`(
             sistemaBbcClient.cadastraChavePix(
                 CreatePixKeyRequest(
-                    criaRetornoItauValida(),
+                    criaRetornoItauValidaPoupanca(),
                     request.toValida()
                 )
             )
@@ -295,7 +295,7 @@ class EndpointRegistraTest(
                     "60701190",
                     "0001",
                     "123455",
-                    TypeAccount.CACC
+                    TypeAccount.SVGS
                 ),
                 createdAt = LocalDateTime.now(),
                 keyType = KeyType.EMAIL,

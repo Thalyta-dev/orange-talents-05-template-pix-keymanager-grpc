@@ -6,7 +6,7 @@ import com.zup.Exception.NaoConectouComServicoExternoException
 import com.zup.servicosExternos.sistemaBbc.BbcClient
 import com.zup.servicosExternos.sistemaBbc.CreatePixKeyRequest
 import com.zup.servicosExternos.sistemaItau.SistemaItau
-import io.micronaut.http.client.exceptions.HttpClientResponseException
+import io.micronaut.http.HttpStatus
 import io.micronaut.validation.Validated
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,7 +33,7 @@ open class PixRegistraService {
 
         val findByValorChave = repository.findByValorChave(requestValidada.valorChave!!)
 
-        if(findByValorChave.isPresent) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente")
+        if (findByValorChave.isPresent) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente")
 
         val dadosClient =
             sistemaItau.retornaDadosCliente(requestValidada.clientId.toString(), requestValidada.tipoConta.toString())
@@ -43,26 +43,15 @@ open class PixRegistraService {
 
 
 
-        try {
+        return sistemaBbc.cadastraChavePix(CreatePixKeyRequest(dadosClient, requestValidada)).run {
 
-            val retorno =  sistemaBbc.cadastraChavePix(CreatePixKeyRequest(dadosClient, requestValidada)).run {
-                 requestValidada.toModel(dadosClient, this.body()!!, repository).let { chave ->
-                    repository.save(chave)
-                }
-            }
-
-            return retorno
-
-        } catch (e: HttpClientResponseException) {
-
-            if (e.status.code == 422) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente no BBC")
-
-            throw NaoConectouComServicoExternoException("Não foi possivel conectar com o BBC")
-
+            if (this.status == HttpStatus.UNPROCESSABLE_ENTITY) throw ChavePixExistenteException("Chave Pix '${requestValidada.valorChave}' existente no BBC")
+            if (this.status != HttpStatus.CREATED) throw NaoConectouComServicoExternoException("Não foi possivel conectar com o BBC")
+            requestValidada.toModel(dadosClient, this.body()!!, repository).let { chave -> repository.save(chave) }
         }
 
-    }
 
+    }
 }
 
 
