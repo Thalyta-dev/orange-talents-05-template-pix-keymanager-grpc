@@ -18,6 +18,7 @@ class EndpointRegistra() : PixRegistraServiceGrpc.PixRegistraServiceImplBase() {
 
     override fun cadastraChave(request: PixRegistraRequest?, responseObserver: StreamObserver<PixRegistraResponse>?) {
 
+        println("A requisição chegou")
 
         request?.toValida().run {  service.cadastraChave(this!!) }.let { cadastraChave ->
 
